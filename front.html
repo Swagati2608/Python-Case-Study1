@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management System</title>
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCRPMGNhIof5dU7-w-PCxMfOK7dL1FEn4I",
+            authDomain: "student-record-mgmt-syst-fecb1.firebaseapp.com",
+            projectId: "student-record-mgmt-syst-fecb1",
+            storageBucket: "student-record-mgmt-syst-fecb1.appspot.com",
+            messagingSenderId: "150196397316",
+            appId: "1:150196397316:web:d1156e8c02c411d619dc51",
+            measurementId: "G-CSX7JPQ7TB"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app); // Firestore database
+
+        // Function to add student to Firestore
+        async function addStudent() {
+            let id = document.getElementById("studentId").value;
+            let name = document.getElementById("name").value;
+            let age = document.getElementById("age").value;
+            let grade = document.getElementById("grade").value;
+
+            if (id && name && age && grade) {
+                try {
+                    await addDoc(collection(db, "students"), { id, name, age, grade });
+                    alert("Student added successfully!");
+                    viewStudents(); // Refresh student list
+                } catch (error) {
+                    console.error("Error adding student:", error);
+                }
+            } else {
+                alert("Please fill all fields!");
+            }
+        }
+
+        // Function to fetch and display all students
+        async function viewStudents() {
+            let table = document.getElementById("studentTable");
+            table.innerHTML = ""; // Clear table
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "students"));
+                querySnapshot.forEach((doc) => {
+                    let student = doc.data();
+                    table.innerHTML += `
+                        <tr>
+                            <td>${student.id}</td>
+                            <td>${student.name}</td>
+                            <td>${student.age}</td>
+                            <td>${student.grade}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error("Error fetching students:", error);
+            }
+        }
+
+        // Function to search for a student by ID
+        async function searchStudent() {
+            let searchId = document.getElementById("searchId").value;
+            let result = document.getElementById("searchResult");
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "students"));
+                let found = false;
+                querySnapshot.forEach((doc) => {
+                    let student = doc.data();
+                    if (student.id === searchId) {
+                        result.innerText = `ID: ${student.id}, Name: ${student.name}, Age: ${student.age}, Grade: ${student.grade}`;
+                        found = true;
+                    }
+                });
+
+                if (!found) result.innerText = "Student not found!";
+            } catch (error) {
+                console.error("Error searching student:", error);
+            }
+        }
+
+        // Function to update student details
+        async function updateStudent() {
+            let id = document.getElementById("updateId").value;
+            let name = document.getElementById("updateName").value;
+            let age = document.getElementById("updateAge").value;
+            let grade = document.getElementById("updateGrade").value;
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "students"));
+                querySnapshot.forEach(async (document) => {
+                    let student = document.data();
+                    if (student.id === id) {
+                        await updateDoc(doc(db, "students", document.id), { name, age, grade });
+                        alert("Student updated successfully!");
+                        viewStudents(); // Refresh list
+                    }
+                });
+            } catch (error) {
+                console.error("Error updating student:", error);
+            }
+        }
+
+        // Function to delete a student by ID
+        async function deleteStudent() {
+            let id = document.getElementById("deleteId").value;
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "students"));
+                querySnapshot.forEach(async (document) => {
+                    let student = document.data();
+                    if (student.id === id) {
+                        await deleteDoc(doc(db, "students", document.id));
+                        alert("Student deleted successfully!");
+                        viewStudents(); // Refresh list
+                    }
+                });
+            } catch (error) {
+                console.error("Error deleting student:", error);
+            }
+        }
+
+        // Automatically load student records on page load
+        window.onload = viewStudents;
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, #f1f1f4, #f5f4f7);
+            color: #392595;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: rgb(236, 231, 231);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        input {
+            margin: 8px;
+            padding: 10px;
+            width: 90%;
+            border: 1px solid #000;
+            border-radius: 5px;
+            font-size: 16px;
+            background: #fff;
+            color: #000;
+        }
+        input::placeholder {
+            color: #555;
+        }
+        button {
+            margin: 8px;
+            padding: 12px;
+            width: 90%;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            background: #3da3ba;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #3da3ba;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            text-align: left;
+            color: #000;
+        }
+        th {
+            background: rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Student Management System</h2>
+        <input type="text" id="studentId" placeholder="Student ID">
+        <input type="text" id="name" placeholder="Name">
+        <input type="number" id="age" placeholder="Age">
+        <input type="text" id="grade" placeholder="Grade">
+        <button onclick="addStudent()">Add Student</button>
+        
+        <h3>Search Student</h3>
+        <input type="text" id="searchId" placeholder="Enter Student ID">
+        <button onclick="searchStudent()">Search</button>
+        <p id="searchResult"></p>
+        
+        <h3>Update Student</h3>
+        <input type="text" id="updateId" placeholder="Enter Student ID">
+        <input type="text" id="updateName" placeholder="New Name">
+        <input type="number" id="updateAge" placeholder="New Age">
+        <input type="text" id="updateGrade" placeholder="New Grade">
+        <button onclick="updateStudent()">Update</button>
+        
+        <h3>Delete Student</h3>
+        <input type="text" id="deleteId" placeholder="Enter Student ID">
+        <button onclick="deleteStudent()">Delete</button>
+        
+        <h3>Student Records</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Grade</th>
+                </tr>
+            </thead>
+            <tbody id="studentTable"></tbody>
+        </table>
+    </div>
+    
+    <script>
+        let students = {}; // Store student data
+    
+        function addStudent() {
+            let id = document.getElementById("studentId").value;
+            let name = document.getElementById("name").value;
+            let age = document.getElementById("age").value;
+            let grade = document.getElementById("grade").value;
+    
+            if (id && name && age && grade) {
+                students[id] = { name, age, grade };
+                alert("Student added successfully!");
+                viewStudents(); // Refresh student table
+            } else {
+                alert("Please fill all fields!");
+            }
+        }
+    
+        function viewStudents() {
+            let table = document.getElementById("studentTable");
+            table.innerHTML = ""; // Clear previous entries
+    
+            for (let id in students) {
+                let student = students[id];
+                table.innerHTML += `
+                    <tr>
+                        <td>${id}</td>
+                        <td>${student.name}</td>
+                        <td>${student.age}</td>
+                        <td>${student.grade}</td>
+                    </tr>
+                `;
+            }
+        }
+    
+        function searchStudent() {
+            let id = document.getElementById("searchId").value;
+            let result = document.getElementById("searchResult");
+    
+            if (students[id]) {
+                result.innerText = `ID: ${id}, Name: ${students[id].name}, Age: ${students[id].age}, Grade: ${students[id].grade}`;
+            } else {
+                result.innerText = "Student not found!";
+            }
+        }
+    
+        function updateStudent() {
+            let id = document.getElementById("updateId").value;
+            let name = document.getElementById("updateName").value;
+            let age = document.getElementById("updateAge").value;
+            let grade = document.getElementById("updateGrade").value;
+    
+            if (students[id]) {
+                students[id] = { name, age, grade };
+                alert("Student updated successfully!");
+                viewStudents(); // Refresh student table
+            } else {
+                alert("Student not found!");
+            }
+        }
+    
+        function deleteStudent() {
+            let id = document.getElementById("deleteId").value;
+    
+            if (students[id]) {
+                delete students[id];
+                alert("Student deleted successfully!");
+                viewStudents(); // Refresh student table
+            } else {
+                alert("Student not found!");
+            }
+        }
+    </script>
+    
+</body>
+</html> 
